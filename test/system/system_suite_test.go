@@ -7,6 +7,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const APIURL = "API_URL"
+
 func TestSystem(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "System Suite")
