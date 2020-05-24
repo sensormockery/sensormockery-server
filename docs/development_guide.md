@@ -11,6 +11,8 @@ You need to have the following tools installed:
 
 Also it would be easier to be on a Unix (or Unix-like) OS. The following environment variables need to be set - GOBIN, GOPATH.
 
+For the sake of simplicity we are using only `postgre` as our db.
+
 ## :wrench: Workflow
 
 We are following a standard workflow:
@@ -51,3 +53,11 @@ make push-docker-image # push docker image to a docker registry
 make run-system-tests
 make run-system-tests skip_update=true # to skip rebuilding when running tests
 ```
+
+## Environment
+
+Most of the variable you need would be loaded from `.envrc`. You would additionally need:
+- `DOCKERHUB_USERNAME` - Your dockerhub username
+- `DOCKERHUB_PASSWROD` - Your dockerhub password
+- `DB_USER` - Your postgre db user
+- `DB_PASS` - Your postgre db password

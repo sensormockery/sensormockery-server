@@ -4,33 +4,23 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-)
 
-const (
-	// EnvPort is the name of the env var for port.
-	EnvPort = "PORT"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 
-	// DefaultPort to be listened on.
-	DefaultPort = "8080"
+	"github.com/sensormockery/sensormockery-server/pkg/db"
+	"github.com/sensormockery/sensormockery-server/pkg/env"
 )
 
 func main() {
-	http.HandleFunc("/mock", mockHTTP)
-
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", getPort()), nil))
-}
-
-func getPort() string {
-	port := os.Getenv(EnvPort)
-
-	if len(port) == 0 {
-		port = DefaultPort
+	if err := db.Migrate(); err != nil {
+		log.Fatal(err)
 	}
 
-	log.Printf("Using PORT %s", port)
+	http.HandleFunc("/mock", mockHTTP)
 
-	return port
+	port := env.GetPort()
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
 
 func mockHTTP(w http.ResponseWriter, req *http.Request) {

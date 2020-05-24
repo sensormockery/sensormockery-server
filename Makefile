@@ -82,7 +82,7 @@ else
 	@make push-docker-image
 endif
 	@make run-docker-image
-	@ginkgo -r
+	@ginkgo -r -v
 	@make kill-docker-image
 
 .PHONY: clean-code
