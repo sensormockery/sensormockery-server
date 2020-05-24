@@ -49,14 +49,49 @@ run-docker-image:
 	@docker run -d -p $(HOST_PORT):$(CONTAINER_PORT) $(DOCKER_TAG)
 	$(call echo_green,"Successfully started $(DOCKER_TAG)")
 
+.PHONY: kill-docker-image
+kill-docker-image:
+	$(call echo_purple,"Killing container with tag $(DOCKER_TAG)...")
+	@docker ps -q --filter ancestor="$(DOCKER_TAG)" | xargs -I {} docker kill {}
+	$(call echo_green,"Killed container with tag $(DOCKER_TAG)...")
+
 .PHONY: push-docker-image
 push-docker-image:
+ifeq ($(DOCKERHUB_USERNAME),)
+	$(call echo_red,"No dockerhub username provided.")
+	@exit 1
+else ifeq ($(DOCKERHUB_PASSWORD),)
+	$(call echo_red,"No dockerhub password provided.")
+	@exit 1
+endif
+
 	$(call echo_purple,"Logging into DockerHub...")
 	@docker login --username=$(DOCKERHUB_USERNAME) --password-stdin <<< $(DOCKERHUB_PASSWORD)
 
 	$(call echo_purple,"Pushing image $(DOCKER_TAG)...")
 	@docker push $(DOCKER_TAG)
 	$(call echo_green,"Successfully pushed $(DOCKER_TAG)")
+
+.PHONY: run-system-tests
+run-system-tests:
+	$(call echo_purple,"Running system tests...")
+ifeq ($(skip_update), true)
+	$(call echo_purple,"Skipping docker image update...")
+else
+	@make build-docker-image
+	@make push-docker-image
+endif
+	@make run-docker-image
+	@ginkgo -r
+	@make kill-docker-image
+
+.PHONY: clean-code
+clean-code:
+	$(call echo_purple,"Cleaning code...")
+	go fmt ./...
+	go vet ./...
+	golint ./...
+
 
 # Define echo colors
 # Use colors as follows:
