@@ -46,7 +46,14 @@ clean-docker-image: check-compliance
 .PHONY: run-docker-image
 run-docker-image:
 	$(call echo_purple,"Starting docker image $(DOCKER_TAG)...")
-	@docker run -d -p $(HOST_PORT):$(CONTAINER_PORT) $(DOCKER_TAG)
+	@docker run \
+	--env DB_USER=$(DB_USER) \
+	--env DB_PASS=$(DB_PASS) \
+	--env DB_DOMAIN=$(DB_TEST_DOMAIN) \
+	--env DB_PORT=$(DB_PORT) \
+	--env DB_NAME=$(DB_NAME) \
+	-d -p $(HOST_PORT):$(CONTAINER_PORT) $(DOCKER_TAG)
+	
 	$(call echo_green,"Successfully started $(DOCKER_TAG)")
 
 .PHONY: kill-docker-image
@@ -82,6 +89,8 @@ else
 	@make push-docker-image
 endif
 	@make run-docker-image
+	$(call echo_purple,"Sleeping for 5 seconds in order to boostrap...")
+	@sleep 5
 	@ginkgo -r -v
 	@make kill-docker-image
 
