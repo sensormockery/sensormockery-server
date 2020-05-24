@@ -23,7 +23,7 @@ var endpoints EndpointRegistry
 
 func init() {
 	endpoints = map[string]*Endpoint{
-		"stream": &Endpoint{
+		CreateStreamPath: {
 			Handler: handleStreamCreation,
 			Method:  http.MethodPost,
 		},
@@ -36,19 +36,21 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	endpoint, ok := endpoints[path]
 
 	if !ok {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Path not found."))
-
+		writeResponse(w, http.StatusNotFound, "Path not found.")
 		return
 	}
 
 	if endpoint.Method != r.Method {
-		w.WriteHeader(http.StatusBadRequest)
 		msg := fmt.Sprintf("Expected a %s request but got a %s one\n", endpoint.Method, r.Method)
-		w.Write([]byte(msg))
+		writeResponse(w, http.StatusBadRequest, msg)
 
 		return
 	}
 
 	endpoint.Handler(w, r)
+}
+
+func writeResponse(w http.ResponseWriter, status int, body string) {
+	w.WriteHeader(status)
+	w.Write([]byte(body))
 }
