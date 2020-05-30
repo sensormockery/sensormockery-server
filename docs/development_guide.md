@@ -58,6 +58,6 @@ make run-system-tests skip_update=true # to skip rebuilding when running tests
 
 Most of the variable you need would be loaded from `.envrc`. You would additionally need:
 - `DOCKERHUB_USERNAME` - Your dockerhub username
-- `DOCKERHUB_PASSWROD` - Your dockerhub password
+- `DOCKERHUB_PASSWORD` - Your dockerhub password
 - `DB_USER` - Your postgre db user
 - `DB_PASS` - Your postgre db password

@@ -50,6 +50,7 @@ var _ = Describe("Stream", func() {
 					WaveType:   "sine",
 					Sensor:     "accelorometer",
 					NoiseCoeff: 0.25,
+					BrokerURL:  "amqp://wlkwdorl:qzRONejPv8GmBiW5-S2TNyYbrTCNL71U@roedeer.rmq.cloudamqp.com/wlkwdorl",
 				}
 
 				req, err := json.Marshal(stream)

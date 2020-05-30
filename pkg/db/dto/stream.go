@@ -13,6 +13,7 @@ type Stream struct {
 	db         *sql.DB
 	id         int
 	locked     int
+	brokerURL  string
 	waveType   string
 	sensor     string
 	noiseCoeff float64
@@ -24,6 +25,8 @@ const (
 	WaveTypeMaxLength = 16
 	// SensorMaxLength represents max strlen of sensor.
 	SensorMaxLength = 64
+	// BrokerURLMaxLength represents max strlen of broker url.
+	BrokerURLMaxLength = 256
 	// StreamsTable is the name of the table in db.
 	StreamsTable = "streams"
 	// Unlocked stream is one that is not currently emitting mocks.
@@ -33,7 +36,7 @@ const (
 )
 
 // NewStream returns a new Stream.
-func NewStream(waveType, sensor string, noiseCoeff float64) (*Stream, error) {
+func NewStream(waveType, sensor, brokerURL string, noiseCoeff float64) (*Stream, error) {
 	s := &Stream{}
 
 	if err := s.SetWaveType(waveType); err != nil {
@@ -45,6 +48,10 @@ func NewStream(waveType, sensor string, noiseCoeff float64) (*Stream, error) {
 	}
 
 	if err := s.SetNoiseCoeff(noiseCoeff); err != nil {
+		return nil, err
+	}
+
+	if err := s.SetBrokerURL(brokerURL); err != nil {
 		return nil, err
 	}
 
@@ -61,8 +68,8 @@ func NewStream(waveType, sensor string, noiseCoeff float64) (*Stream, error) {
 // After upload id is set the the id of the row inserted.
 func (s *Stream) Upload() error {
 	stmt, err := s.db.Prepare("INSERT INTO " + StreamsTable +
-		"(locked, wave_type, sensor, noise_coeff, start_date)" +
-		" VALUES ($1, $2, $3, $4, $5)" +
+		"(locked, broker_url, wave_type, sensor, noise_coeff, start_date)" +
+		" VALUES ($1, $2, $3, $4, $5, $6)" +
 		" RETURNING id")
 	if err != nil {
 		return err
@@ -70,7 +77,7 @@ func (s *Stream) Upload() error {
 	defer stmt.Close()
 
 	currTime := time.Now().Format("2006-01-02 15:04:05")
-	stmt.QueryRow(Unlocked, s.waveType, s.sensor, s.noiseCoeff, currTime).Scan(&(s.id))
+	stmt.QueryRow(Unlocked, s.brokerURL, s.waveType, s.sensor, s.noiseCoeff, currTime).Scan(&(s.id))
 
 	return nil
 }
@@ -107,6 +114,16 @@ func (s *Stream) SetNoiseCoeff(noiseCoeff float64) error {
 	}
 
 	s.noiseCoeff = noiseCoeff
+	return nil
+}
+
+// SetBrokerURL is a setter for brokerURL.
+func (s *Stream) SetBrokerURL(brokerURL string) error {
+	if len(brokerURL) > BrokerURLMaxLength {
+		return fmt.Errorf("BrokerURL should be shorter than %d", BrokerURLMaxLength)
+	}
+
+	s.brokerURL = brokerURL
 	return nil
 }
 

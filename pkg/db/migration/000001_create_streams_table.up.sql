@@ -12,6 +12,7 @@ INSERT INTO wave_types (wave_type) VALUES ('sine');
 CREATE TABLE IF NOT EXISTS streams (
     id SERIAL PRIMARY KEY,
     locked INT DEFAULT 0 NOT NULL,
+    broker_url VARCHAR (256) NOT NULL,
     wave_type VARCHAR (16) NOT NULL REFERENCES wave_types(wave_type) ON DELETE CASCADE,
     sensor VARCHAR (64) NOT NULL,
     noise_coeff REAL DEFAULT 0,

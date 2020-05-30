@@ -27,6 +27,10 @@ func init() {
 			Handler: handleStreamCreation,
 			Method:  http.MethodPost,
 		},
+		DeleteStreamPath: {
+			Handler: handleStreamDeletion,
+			Method:  http.MethodDelete,
+		},
 	}
 }
 
