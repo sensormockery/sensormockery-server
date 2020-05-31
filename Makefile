@@ -8,6 +8,10 @@ build: build-binary build-docker-image
 build-binary: check-compliance
 	$(call install_app,"sensormockery","sensormockery/sensormockery.go")
 
+.PHONY: build-binary-client
+build-binary-client: check-compliance
+	$(call install_app,"client","client/client.go")
+
 .PHONY: clean
 clean: clean-binary clean-docker-image
 
