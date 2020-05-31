@@ -9,6 +9,12 @@ import (
 		#include <sensormockery/mock.c>
 	*/
 	"C"
+
+	"github.com/streadway/amqp"
+)
+import (
+	"encoding/json"
+	"fmt"
 )
 
 // Stream represents a stream.
@@ -18,6 +24,11 @@ type Stream struct {
 	Sensor     string
 	NoiseCoeff float64
 	BrokerURL  string
+}
+
+// DataPoint represents data point.
+type DataPoint struct {
+	Data float64 `json:"data_point"`
 }
 
 const (
@@ -67,17 +78,24 @@ func StopStream(id int) {
 func sendMocks(stream *Stream) {
 	deltaTime := 0.0
 
+	conn, channel, queue := initBroker(stream)
+	defer conn.Close()
+	defer channel.Close()
+
 	for {
 		if !currStreams[stream.ID] {
 			delete(currStreams, stream.ID)
 			return
 		}
 
-		deltaTime += 0.02
-		mockedData := getMockedData(deltaTime, stream)
+		deltaTime += 0.2
 
-		log.Printf("value: %f\n", mockedData)
-		time.Sleep(time.Millisecond * 20)
+		dataPoint := &DataPoint{
+			Data: getMockedData(deltaTime, stream),
+		}
+		sendMessageToBroker(channel, queue, dataPoint)
+
+		time.Sleep(time.Millisecond * 200)
 	}
 }
 
@@ -111,4 +129,44 @@ func getMockedData(x float64, stream *Stream) float64 {
 	}
 
 	return float64(mockedData)
+}
+
+func handleError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
+func initBroker(stream *Stream) (*amqp.Connection, *amqp.Channel, *amqp.Queue) {
+	conn, err := amqp.Dial(stream.BrokerURL)
+	handleError(err, "Can't connect to AMQP")
+
+	amqpChannel, err := conn.Channel()
+	handleError(err, "Can't create a amqpChannel")
+
+	// create (if not existent) the stream queue
+	amqpQueue, err := amqpChannel.QueueDeclare(fmt.Sprintf("stream-%d", stream.ID), false, true, false, false, nil)
+	handleError(err, "Could not declare `tasks` queue")
+
+	// set up stream queue
+	err = amqpChannel.Qos(1, 0, true)
+	handleError(err, "Could not configure QoS")
+
+	return conn, amqpChannel, &amqpQueue
+}
+
+func sendMessageToBroker(channel *amqp.Channel, queue *amqp.Queue, dataPoint *DataPoint) {
+	body, err := json.Marshal(dataPoint)
+	handleError(err, "Failed to marshal data")
+
+	err = channel.Publish(
+		"",         // exchange
+		queue.Name, // routing key
+		false,      // mandatory
+		false,      // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        []byte(body),
+		})
+	handleError(err, "Failed to publish a message")
 }
