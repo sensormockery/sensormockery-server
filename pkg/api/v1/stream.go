@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/sensormockery/sensormockery-server/pkg/db/dto"
@@ -66,6 +67,7 @@ func handleStreamCreation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	streamUtil.StartStream(stream)
+	log.Printf("Created stream-%d", streamDTO.GetID())
 
 	// Write response
 	resp := &CreateStreamResp{
@@ -95,6 +97,7 @@ func handleStreamDeletion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	streamUtil.StopStream(id.ID)
+	log.Printf("Stopped stream-%d", id.ID)
 
 	writeResponse(w, http.StatusOK, "")
 }

@@ -147,6 +147,7 @@ func initBroker(stream *Stream) (*amqp.Connection, *amqp.Channel, *amqp.Queue) {
 	// create (if not existent) the stream queue
 	amqpQueue, err := amqpChannel.QueueDeclare(fmt.Sprintf("stream-%d", stream.ID), false, true, false, false, nil)
 	handleError(err, "Could not declare `tasks` queue")
+	log.Printf("Started sending data points to queue stream-%d", stream.ID)
 
 	// set up stream queue
 	err = amqpChannel.Qos(1, 0, true)
